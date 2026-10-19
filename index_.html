@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retro Android UI</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+      overflow: hidden !important; overscroll-behavior: none;
+    }
+    body {
+      position: fixed; inset: 0;
+      background: #111; display: flex; justify-content: center; align-items: stretch;
+      min-height: 0; touch-action: pan-x pan-y;
+    }
+
+    #phone-container {
+      width: 100vw;
+      height: 100%; height: 100dvh; max-height: 100%;
+      background: #000; border: 0; border-radius: 0;
+      display: flex; flex-direction: column; overflow: hidden; position: relative;
+      box-shadow: none; flex: 0 0 auto; contain: layout paint;
+    }
+
+    @media (min-width: 500px) and (min-height: 700px) {
+      body { align-items: center; }
+      #phone-container {
+        width: min(430px, 100vw); height: min(850px, 100%); max-height: 850px;
+        border: 12px solid #333; border-radius: 36px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      }
+    }
+
+    #status-bar {
+      height: 24px; background: #222; color: #fff; font-size: 11px; display: flex;
+      justify-content: space-between; align-items: center; padding: 0 12px; flex-shrink: 0; z-index: 10;
+    }
+
+    #screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; overscroll-behavior: contain; background: #181a1f; display: flex; flex-direction: column; }
+    #home-screen, .app-view, #chat-bubbles, #contacts-list, #calllog-list, #memo-list, #calendar-list { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+
+    #lock-screen {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(20,20,20,0.95);
+      z-index: 20; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 40px 20px;
+      transition: none;
+      touch-action: manipulation;
+    }
+    #lock-clock { font-size: 48px; color: #fff; font-weight: bold; }
+    #lock-date { font-size: 14px; color: #aaa; margin-top: 5px; }
+    #lock-slide-text { font-size: 13px; color: #666; animation: blink 1.5s infinite; cursor: pointer; }
+    @keyframes blink { 0% { opacity: 0.3; } 50% { opacity: 1; } 100% { opacity: 0.3; } }
+
+    #home-screen { padding: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; align-content: start; height: 100%; overflow-y: auto; }
+    .app-icon { display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; }
+    .app-icon div.icon-box { width: 56px; height: 56px; background: #333; border-radius: 14px; display: flex; justify-content: center; align-items: center; font-size: 24px; color: #fff; margin-bottom: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    .app-icon span { font-size: 11px; color: #ccc; }
+
+    .app-view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #181a1f; display: none; flex-direction: column; z-index: 5; }
+    .app-header { height: 44px; background: #222; color: #fff; display: flex; align-items: center; padding: 0 15px; font-size: 15px; font-weight: bold; gap: 10px; border-bottom: 1px solid #333; }
+    .back-arrow { cursor: pointer; font-size: 18px; }
+
+    #nav-bar { height: 48px; background: #222; display: flex; justify-content: space-around; align-items: center; flex-shrink: 0; z-index: 10; border-top: 1px solid #333; }
+    .nav-btn { color: #888; font-size: 18px; cursor: pointer; background: none; border: none; }
+    .nav-btn:active { color: #fff; }
+
+
+    /* TouchWiz / early Galaxy-inspired visual redesign */
+    :root { color-scheme: dark; }
+    * { font-family: Arial, 'Apple SD Gothic Neo', sans-serif; }
+    html, body { background:#101114; overflow:hidden !important; overscroll-behavior:none; }
+    body { align-items:stretch; touch-action:pan-x pan-y; }
+    #phone-container { background:#050607; }
+    #status-bar { height:22px; min-height:22px; padding:0 9px; background:#17181b; color:#f4f4f4; font-size:10px; border-bottom:1px solid #303136; }
+    #status-bar span:last-child { opacity:.88; font-size:9px; }
+    #screen-area { background:#050608; }
+    #home-screen {
+      background:
+        radial-gradient(ellipse at 12% 18%,rgba(119,222,255,.95) 0,rgba(40,151,245,.55) 18%,transparent 43%),
+        radial-gradient(ellipse at 88% 12%,rgba(102,202,255,.95) 0,rgba(19,117,225,.55) 25%,transparent 48%),
+        linear-gradient(135deg,#70d7ff 0%,#168ee8 30%,#0870d3 62%,#034aaf 100%);
+      background-size:cover; padding:24px 18px 18px; grid-template-columns:repeat(3,minmax(0,1fr)); gap:22px 12px; align-content:start; overflow:hidden !important;
+      position:relative;
+    }
+    #home-screen:before { content:""; position:absolute; inset:-20%; pointer-events:none; background:repeating-linear-gradient(128deg,transparent 0 38px,rgba(255,255,255,.12) 40px 48px,transparent 52px 83px); transform:skewY(-8deg); }
+    .app-icon { position:relative; z-index:1; gap:0; }
+    .app-icon div.icon-box { width:43px; height:43px; border-radius:9px; border:1px solid rgba(255,255,255,.7); box-shadow:0 2px 4px #003d7b99,inset 0 1px 2px #ffffffa8; font-size:22px; margin-bottom:5px; }
+    .app-icon span { color:#fff; text-shadow:0 1px 2px #003d75; font-size:10px; }
+    .app-icon:nth-child(1) .icon-box { background:linear-gradient(#b8e6ff,#138bdc)!important; }
+    .app-icon:nth-child(2) .icon-box { background:linear-gradient(#fff,#c8e7fb)!important; }
+    .app-icon:nth-child(3) .icon-box { background:linear-gradient(#fff6a8,#f4bd26)!important; }
+    .app-icon:nth-child(4) .icon-box { background:linear-gradient(#fff6b3,#e9b921)!important; }
+    .app-icon:nth-child(5) .icon-box { background:linear-gradient(#fff,#d8e1ec)!important; }
+    .app-view { background:#000; color:#e7e7e7; }
+    .app-header { min-height:38px; height:38px; background:linear-gradient(#35373b,#111214 55%,#24262a); border-bottom:1px solid #55585c; padding:0 10px; font-size:13px; box-shadow:inset 0 1px #777; }
+    .back-arrow { color:#bbb; font-size:15px; }
+    #nav-bar { height:34px; min-height:34px; background:linear-gradient(#202125,#090a0c); border-top:1px solid #414348; justify-content:space-around; }
+    .nav-btn { color:#a7abb1; width:54px; height:30px; font-size:18px; text-shadow:0 1px #000; }
+    #lock-screen { background:
+      radial-gradient(ellipse at 15% 25%,rgba(126,224,255,.95),transparent 35%),
+      radial-gradient(ellipse at 80% 10%,rgba(77,185,255,.8),transparent 35%),
+      linear-gradient(135deg,#58c6ff,#0876d8 55%,#034ca9); padding:34px 18px 38px; }
+    #lock-screen:before { content:""; position:absolute; inset:0; background:repeating-linear-gradient(130deg,transparent 0 34px,rgba(255,255,255,.13) 37px 44px,transparent 48px 78px); pointer-events:none; }
+    #lock-screen > div { position:relative; z-index:1; }
+    #lock-clock { font-size:42px; font-weight:300; text-shadow:0 1px 3px #064a8a; }
+    #lock-date { color:#e4f5ff; font-size:11px; }
+    #lock-slide-text { color:#eaf8ff; font-size:10px; text-shadow:0 1px 2px #03437d; }
+    #app-chatRoom #chat-bubbles { background:linear-gradient(#090a0b,#17191b)!important; padding:10px!important; gap:6px!important; }
+    #chat-bubbles > div[style*="border-radius"] { border-radius:5px!important; box-shadow:0 1px 2px #0008; }
+    #app-chatRoom input { border-radius:2px!important; background:#fff!important; color:#222!important; border:1px solid #aaa!important; min-width:0; }
+    #app-chatRoom button { border-radius:2px!important; background:linear-gradient(#fff,#c7c7c7)!important; color:#222!important; border:1px solid #888!important; }
+    #contacts-list, #calllog-list, #memo-list, #calendar-list, #msg-room-list-container { background:#000; }
+    #contacts-list > div, #calllog-list > div:not(:first-child) { background:linear-gradient(#17181a,#030304)!important; border-bottom:1px solid #303135!important; }
+    #contacts-list > div { min-height:51px; padding:10px 10px 8px 45px!important; position:relative; }
+    #contacts-list > div:before { content:"👤"; position:absolute; left:9px; top:10px; width:28px; height:28px; border-radius:3px; background:linear-gradient(#dce5ed,#687582); display:grid; place-items:center; font-size:16px; }
+    #contacts-list > div div:first-child { color:#f0f0f0!important; font-size:12px!important; }
+    #contacts-list > div div:last-child { color:#a7a7a7!important; font-size:10px!important; }
+    #calllog-list > div:first-child { background:linear-gradient(#65676b,#34363a)!important; color:#fff!important; }
+    #calllog-list > div:not(:first-child) { padding:9px 10px!important; }
+    #calllog-list > div:not(:first-child) > div:first-child:before { content:"⌄"; color:#d94c4c; font-size:17px; margin-right:8px; }
+    #memo-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-content:start; gap:7px; padding:8px!important; }
+    #memo-list > div { min-width:0; min-height:88px; padding:9px!important; color:#3c3517!important; background:linear-gradient(135deg,#fff7a0,#f4d94c)!important; border:1px solid #c8b23b; border-radius:2px; box-shadow:0 1px 3px #0009; overflow-wrap:anywhere; }
+    #memo-list > div div:first-child { color:#807333!important; font-size:8px!important; }
+    #memo-list > div div:last-child { color:#3f391b!important; font-size:10px!important; line-height:1.45!important; }
+    #calendar-list > div { background:linear-gradient(#17181a,#030304)!important; border-bottom:1px solid #343538!important; padding:10px!important; }
+    #calendar-list > div div:first-child { color:#8bbcf1!important; }
+    #msg-room-list-container > div { background:linear-gradient(#191a1c,#050506)!important; border-bottom:1px solid #333!important; }
+    #msg-room-list-container > div > div:first-child { border-radius:3px!important; border:1px solid #777; }
+    #msg-room-list-container > div span { color:#eee!important; }
+    #msg-room-list-container > div div[style*="font-size:11px"] { color:#aaa!important; }
+    /* The outer display stays fixed; only app contents with long lists may scroll. */
+    html, body, #phone-container, #screen-area { overscroll-behavior:none; }
+    #home-screen { touch-action:manipulation; }
+    #chat-bubbles, #contacts-list, #calllog-list, #memo-list, #calendar-list, #msg-room-list-container { overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; min-height:0; }
+    @media (min-width:500px) and (min-height:700px) { #phone-container { border:10px solid #292a2d; border-radius:26px; } }
+
+
+    /* Reference-matched full-screen proportions and large Galaxy hardware keys */
+    #phone-container { width:100vw!important; max-width:none!important; height:100dvh!important; max-height:none!important; border:0!important; border-radius:0!important; }
+    #status-bar { height:30px; min-height:30px; padding:0 14px; font-size:14px; }
+    #status-bar span:last-child { font-size:12px; }
+    #screen-area { flex:1; min-height:0; }
+    #nav-bar { height:100px!important; min-height:100px!important; flex:0 0 100px; padding:0 7%; display:grid; grid-template-columns:1fr 1.5fr 1fr; align-items:center; justify-items:center; background:linear-gradient(110deg,#08090b,#1a1b1f 50%,#08090b)!important; border-top:2px solid #33363b!important; }
+    .nav-btn { display:flex; align-items:center; justify-content:center; width:100%; height:100%; background:none!important; border:0; color:#aeb4bd; }
+    .nav-menu .menu-glyph { display:block; width:34px; height:24px; border:3px solid #9ba1aa; border-radius:3px; font-size:0; position:relative; }
+    .nav-menu .menu-glyph:before,.nav-menu .menu-glyph:after { content:""; position:absolute; left:4px; right:4px; height:2px; background:#9ba1aa; }
+    .nav-menu .menu-glyph:before { top:5px; } .nav-menu .menu-glyph:after { bottom:5px; }
+    .nav-home .home-glyph { width:138px; max-width:90%; height:58px; border:3px solid #45484e; border-radius:24px; background:linear-gradient(#303237,#111215 60%,#24262a); box-shadow:inset 0 2px 3px #666,0 1px 2px #000; display:flex; align-items:center; justify-content:center; }
+    .nav-home .home-glyph:after { content:""; width:47px; height:14px; border:3px solid #696e76; border-radius:5px; box-shadow:inset 0 1px 2px #000; }
+    .nav-back .back-glyph { font-size:48px; font-weight:300; line-height:1; transform:rotate(0deg); }
+    /* Larger type and touch targets, similar to the reference screenshot */
+    .app-header { height:50px; min-height:50px; font-size:17px; padding:0 14px; }
+    .back-arrow { font-size:22px; }
+    .app-icon div.icon-box { width:54px; height:54px; font-size:26px; }
+    .app-icon span { font-size:13px; }
+    #lock-screen { padding:5vh 6vw 6vh; }
+    #lock-clock { font-size:clamp(56px, 11vw, 82px); }
+    #lock-date { font-size:clamp(16px, 3.5vw, 22px); margin-top:10px; }
+    #lock-slide-text { font-size:clamp(16px, 3.3vw, 22px); }
+    #home-screen { padding:28px 24px; gap:30px 18px; }
+    #contacts-list > div div:first-child { font-size:16px!important; }
+    #contacts-list > div div:last-child { font-size:13px!important; }
+    #contacts-list > div { min-height:66px; padding:12px 12px 10px 54px!important; }
+    #contacts-list > div:before { width:34px; height:34px; font-size:19px; }
+    #calllog-list > div:not(:first-child) { padding:13px!important; font-size:15px; }
+    #memo-list > div { min-height:120px; padding:12px!important; }
+    #memo-list > div div:first-child { font-size:11px!important; }
+    #memo-list > div div:last-child { font-size:14px!important; line-height:1.5!important; }
+    #app-chatRoom input { font-size:16px!important; padding:10px!important; }
+    #app-chatRoom button { font-size:15px!important; padding:8px 14px!important; }
+    #chat-bubbles > div[style*="border-radius"] { font-size:15px!important; line-height:1.5!important; }
+    @media (min-width:500px) and (min-height:700px) { body { align-items:stretch!important; } #phone-container { width:min(520px,100vw)!important; height:100dvh!important; } }
+
+  </style>
+</head>
+<body>
+
+  <div id="phone-container">
+    <div id="status-bar">
+      <span id="status-clock">오전 12:00</span>
+      <span>2009년 2월 15일 일요일</span>
+    </div>
+
+    <div id="screen-area">
+      <!-- 잠금 화면 -->
+      <div id="lock-screen" onclick="unlockPhone()">
+        <div style="text-align:center;">
+          <div id="lock-clock">12:00</div>
+          <div id="lock-date">2월 15일 일요일</div>
+        </div>
+        <div id="lock-slide-text">▲ 위로 밀어서 잠금 해제</div>
+      </div>
+
+      <!-- 홈 화면 -->
+      <div id="home-screen">
+        <div class="app-icon" onclick="openApp('messages')">
+          <div class="icon-box" style="background:#1e88e5;">✉️</div>
+          <span>메시지</span>
+        </div>
+        <div class="app-icon" onclick="openApp('contacts')">
+          <div class="icon-box" style="background:#fb8c00;">👤</div>
+          <span>연락처</span>
+        </div>
+        <div class="app-icon" onclick="openApp('callLog')">
+          <div class="icon-box" style="background:#43a047;">📞</div>
+          <span>통화기록</span>
+        </div>
+        <div class="app-icon" onclick="openApp('memo')">
+          <div class="icon-box" style="background:#fbc02d;">📝</div>
+          <span>메모</span>
+        </div>
+        <div class="app-icon" onclick="openApp('calendar')">
+          <div class="icon-box" style="background:#e53935;">📅</div>
+          <span>캘린더</span>
+        </div>
+      </div>
+
+      <!-- 메시지 목록 앱 뷰 -->
+      <div id="app-messages" class="app-view"></div>
+
+      <!-- 개별 채팅방 뷰 -->
+      <div id="app-chatRoom" class="app-view">
+        <div class="app-header">
+          <span class="back-arrow" onclick="openApp('messages')">◀</span>
+          <span id="chat-room-title">채팅방</span>
+        </div>
+        <div id="chat-bubbles" style="flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:8px; background:#121212;"></div>
+        <div style="padding:10px; background:#222; display:flex; gap:8px;">
+          <input type="text" id="chat-input-text" placeholder="메시지 입력..." style="flex:1; padding:8px; border-radius:4px; border:1px solid #444; background:#111; color:#fff; font-size:12px;" onkeypress="if(event.key==='Enter') sendMsg(currentChatRoom)">
+          <button onclick="sendMsg(currentChatRoom)" style="padding:0 12px; background:#527da8; color:#fff; border:none; border-radius:4px; font-size:12px; cursor:pointer;">전송</button>
+        </div>
+      </div>
+
+      <!-- 연락처 앱 뷰 -->
+      <div id="app-contacts" class="app-view">
+        <div class="app-header"><span class="back-arrow" onclick="goBack()">◀</span> 연락처</div>
+        <div id="contacts-list" style="flex:1; overflow-y:auto; padding:10px;"></div>
+      </div>
+
+      <!-- 통화기록 앱 뷰 -->
+      <div id="app-callLog" class="app-view">
+        <div class="app-header"><span class="back-arrow" onclick="goBack()">◀</span> 통화기록</div>
+        <div id="calllog-list" style="flex:1; overflow-y:auto; padding:10px;"></div>
+      </div>
+
+      <!-- 메모 앱 뷰 -->
+      <div id="app-memo" class="app-view">
+        <div class="app-header"><span class="back-arrow" onclick="goBack()">◀</span> 메모</div>
+        <div id="memo-list" style="flex:1; overflow-y:auto; padding:10px;"></div>
+      </div>
+
+      <!-- 캘린더 앱 뷰 -->
+      <div id="app-calendar" class="app-view">
+        <div class="app-header"><span class="back-arrow" onclick="goBack()">◀</span> 캘린더</div>
+        <div id="calendar-list" style="flex:1; overflow-y:auto; padding:10px;"></div>
+      </div>
+    </div>
+
+    <div id="nav-bar">
+      <button class="nav-btn nav-menu" aria-label="목록" onclick="showAppMenu()"><span class="menu-glyph">☰</span></button>
+      <button class="nav-btn nav-home" aria-label="홈" onclick="goHome()"><span class="home-glyph"></span></button>
+      <button class="nav-btn nav-back" aria-label="실행 취소" onclick="goBack()"><span class="back-glyph">↶</span></button>
+    </div>
+  </div>
+
+  <script>
+    function $(id) { return document.getElementById(id); }
+    function showAppMenu() {
+      const visible = document.querySelector('.app-view[style*="display: flex"], .app-view[style*="display: block"]');
+      if (visible) goBack(); else goHome();
+    }
+    function goHome() {
+      document.querySelectorAll('.app-view').forEach(v => v.style.display = 'none');
+      const home = $('home-screen'); if (home) home.style.display = 'grid';
+      const lock = $('lock-screen'); if (lock) lock.style.display = 'none';
+    }
+
+
+    function updateClock() {
+      const now = new Date();
+      let h = now.getHours();
+      let m = String(now.getMinutes()).padStart(2, '0');
+      let ampm = h >= 12 ? '오후' : '오전';
+      let h12 = h % 12 || 12;
+
+      const timeStr = ampm + " " + String(h12).padStart(2, '0') + ":" + m;
+      const lockTimeStr = String(h12).padStart(2, '0') + ":" + m;
+
+      if($('status-clock')) $('status-clock').textContent = timeStr;
+      if($('lock-clock')) $('lock-clock').textContent = lockTimeStr;
+    }
+    updateClock();
+    setInterval(updateClock, 15000);
+
+    function unlockPhone() {
+      const lockScreen = $('lock-screen');
+      if (lockScreen) {
+        lockScreen.style.display = 'none';
+        lockScreen.style.pointerEvents = 'none';
+      }
+    }
+
+    let currentApp = 'home';
+    let currentChatRoom = '';
+
+    function openApp(appName, param) {
+      currentApp = appName;
+      document.querySelectorAll('.app-view').forEach(v => v.style.display = 'none');
+      $('home-screen').style.display = 'none';
+
+      if(appName === 'home') {
+        $('home-screen').style.display = 'grid';
+      } else if(appName === 'messages') {
+        $('app-messages').style.display = 'flex';
+        renderMessagesApp($('app-messages'));
+      } else if(appName === 'chatRoom') {
+        currentChatRoom = param;
+        $('app-chatRoom').style.display = 'flex';
+        $('chat-room-title').textContent = param;
+        loadChatBubbles(param);
+      } else if(appName === 'contacts') {
+        $('app-contacts').style.display = 'flex';
+        renderContactsApp();
+      } else if(appName === 'callLog') {
+        $('app-callLog').style.display = 'flex';
+        renderCallLogApp();
+      } else if(appName === 'memo') {
+        $('app-memo').style.display = 'flex';
+        renderMemoApp();
+      } else if(appName === 'calendar') {
+        $('app-calendar').style.display = 'flex';
+        renderCalendarApp();
+      } else {
+        const target = $('app-' + appName);
+        if(target) target.style.display = 'flex';
+      }
+    }
+
+    function goBack() {
+      if(currentApp === 'chatRoom') {
+        openApp('messages');
+      } else {
+        openApp('home');
+      }
+    }
+
+    // --- 원본 데이터 모듈 ---
+    const contactsData = [
+      {name: "강예린", phone: "110-2841-6392"}, {name: "김민서", phone: "110-5730-1826"},
+      {name: "류해온", phone: "110-4196-7253"}, {name: "박승윤", phone: "110-8263-4107"},
+      {name: "아빠", phone: "110-1957-3842"}, {name: "엄마", phone: "110-6428-9513"},
+      {name: "윤지호", phone: "110-3075-8264"}, {name: "이도현", phone: "110-9182-5730"},
+      {name: "이유림", phone: "110-4619-2085"}, {name: "정다은", phone: "110-7352-6941"},
+      {name: "차지우", phone: "110-5824-1376"}, {name: "최서윤", phone: "110-2496-8135"},
+      {name: "한유진", phone: "110-6741-5298"}
+    ];
+
+    const favoritesList = ["류해온", "아빠", "엄마"];
+
+    const callsData = [
+      {date: "2009.09.20", logs: [
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "발신", name: "아빠", status: "연결되지 않음"},
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "발신", name: "류해온", status: "연결되지 않음"},
+        {type: "수신", name: "류해온", duration: "00:08"}
+      ]},
+      {date: "2009.09.21", logs: [
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "발신", name: "아빠", status: "연결되지 않음"},
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "수신", name: "류해온", duration: "00:08"}
+      ]},
+      {date: "2009.09.22", logs: [
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "발신", name: "아빠", status: "연결되지 않음"},
+        {type: "수신", name: "류해온", duration: "01:12"},
+        {type: "발신", name: "류해온", duration: "00:19"}
+      ]},
+      {date: "2009.09.23", logs: [
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "발신", name: "엄마", status: "연결되지 않음"},
+        {type: "수신", name: "류해온", duration: "02:17"},
+        {type: "수신", name: "류해온", duration: "00:36"}
+      ]}
+    ];
+
+    const memoData = [
+      {date: "2009.02.14", text: "초콜릿 하나 남겨 둠\n줄 생각 없었는데 결국 줬다"},
+      {date: "2010.02.03", text: "오래 걷는 건 아직 무리\n상처 상태 계속 확인하기"},
+      {date: "2010.01.18", text: "창고에 있는 물품 재분류\n못 쓰는 물건도 바로 버리지 말고 확인하기"},
+      {date: "2010.01.01", text: "새해\n남은 식량이랑 약품 수량 다시 정리하기"},
+      {date: "2009.12.25", text: "오늘 크리스마스\n날짜를 보고서야 알았다"},
+      {date: "2009.12.05", text: "겨울옷 배급\n담요랑 장갑 부족함"},
+      {date: "2009.11.22", text: "밤에 외부 소리 들렸음\n확인되지 않은 소문은 퍼뜨리지 말 것"},
+      {date: "2009.11.06", text: "진통제 수량 확인\n필요한 사람한테 먼저 배분하기"},
+      {date: "2009.10.19", text: "오래 걸으면 오른쪽 다리가 아픔\n붕대 교체할 때 상처 상태 확인"},
+      {date: "2009.10.14", text: "식량 배급량 조정\n통조림은 종류별로 나눠서 보관하기"},
+      {date: "2009.10.02", text: "북문 쪽 출입 확인\n혼자 나가지 말 것"},
+      {date: "2009.09.26", text: "보건실에서 쓸 만한 약품 옮겨 둠\n소독약이랑 붕대는 따로 보관"},
+      {date: "2009.09.22", text: "생수 남은 수량 다시 확인\n배급할 때 한 사람당 몇 병인지 정하기"},
+      {date: "2009.09.20", text: "학교 안에 남은 사람들 확인\n방송실 쪽은 아직 못 가 봄"},
+      {date: "2009.09.19", text: "체육복 세탁 맡기기\n월요일에 입어야 함"},
+      {date: "2009.09.17", text: "수학 프린트 풀어가기\n안 해 가면 또 검사함"},
+      {date: "2009.09.14", text: "미술 준비물 챙기기\n검정 펜이랑 자"},
+      {date: "2009.09.08", text: "영어 수행평가 대본 외우기\n금요일까지 제출"}
+    ];
+
+    const calendarData = {
+      "2009-09-20": [{text: "아포칼립스 발생", color: "red"}, {text: "우측 다리 부상", color: "purple"}, {text: "생존자 집결", color: "red"}],
+      "2009-09-21": [{text: "보급품 현황 확인", color: "green"}, {text: "부상 상태 확인", color: "purple"}],
+      "2009-09-22": [{text: "보급품 분류", color: "green"}, {text: "식량 재고 확인", color: "green"}],
+      "2009-09-23": [{text: "보급 업무 재개", color: "green"}, {text: "생존 물자 정리", color: "green"}],
+      "2009-10-02": [{text: "보급품 재고 확인", color: "green"}, {text: "류해온 순찰", color: "blue"}],
+      "2009-10-08": [{text: "식량 배급량 조정", color: "green"}, {text: "의약품 재고 확인", color: "purple"}],
+      "2009-10-14": [{text: "북문 바리케이드 점검", color: "orange"}, {text: "외부 이동 경로 확인", color: "orange"}],
+      "2009-10-19": [{text: "류해온 순찰", color: "blue"}, {text: "붕대 교체", color: "purple"}],
+      "2009-10-27": [{text: "보급 창고 정리", color: "green"}, {text: "손상 물품 분류", color: "green"}],
+      "2009-11-06": [{text: "류해온 순찰", color: "blue"}, {text: "진통제 및 붕대 재고 확인", color: "purple"}],
+      "2009-11-13": [{text: "식량 보급 현황 갱신", color: "green"}, {text: "외부 접근 흔적 확인", color: "red"}],
+      "2009-11-22": [{text: "발전 설비 점검", color: "orange"}, {text: "야간 순찰 인원 조정", color: "blue"}],
+      "2009-12-05": [{text: "방한 물품 배급", color: "green"}, {text: "난방 구역 확인", color: "orange"}],
+      "2009-12-12": [{text: "식량 재고 조사", color: "green"}, {text: "보급품 분배", color: "green"}],
+      "2009-12-25": [{text: "정기 보급품 분배", color: "green"}, {text: "류해온 순찰", color: "blue"}],
+      "2010-01-01": [{text: "새해 첫날", color: "white"}, {text: "생존 인원 및 물자 현황 갱신", color: "green"}],
+      "2010-01-12": [{text: "식량 재고 조사", color: "green"}, {text: "의약품 사용량 확인", color: "purple"}],
+      "2010-01-18": [{text: "보급 창고 정리", color: "green"}, {text: "방한 물품 확인", color: "green"}],
+      "2010-01-26": [{text: "북문 바리케이드 보수", color: "orange"}, {text: "순찰 경로 재검토", color: "orange"}],
+      "2010-02-03": [{text: "류해온 순찰", color: "blue"}, {text: "부상 상태 확인", color: "purple"}],
+      "2010-02-08": [{text: "보급품 재고 확인", color: "green"}, {text: "식량 배급", color: "green"}],
+      "2010-02-14": [{text: "정기 보급품 분배", color: "green"}, {text: "류해온 순찰", color: "blue"}]
+    };
+    const colorMap = { red: "#e53935", purple: "#ab47bc", green: "#4caf50", blue: "#2196f3", orange: "#ff9800", white: "#ffffff" };
+
+    // --- 렌더링 함수들 ---
+    function renderContactsApp() {
+      const list = $('contacts-list');
+      list.innerHTML = "";
+      contactsData.forEach(c => {
+        const item = document.createElement('div');
+        item.style.cssText = "padding:12px; border-bottom:1px solid #333; color:#fff;";
+        const isFav = favoritesList.includes(c.name) ? '★ ' : '';
+        item.innerHTML = `<div style="font-weight:bold; font-size:13px;">${isFav}${c.name}</div><div style="font-size:11px; color:#888;">${c.phone}</div>`;
+        list.appendChild(item);
+      });
+    }
+
+    function renderCallLogApp() {
+      const list = $('calllog-list');
+      list.innerHTML = "";
+      callsData.forEach(group => {
+        const dateDiv = document.createElement('div');
+        dateDiv.style.cssText = "padding:6px 12px; font-size:11px; color:#888; background:#111;";
+        dateDiv.textContent = group.date;
+        list.appendChild(dateDiv);
+        group.logs.forEach(log => {
+          const item = document.createElement('div');
+          item.style.cssText = "padding:10px 12px; border-bottom:1px solid #333; color:#fff; display:flex; justify-content:space-between; align-items:center;";
+          item.innerHTML = `<div><div style="font-size:13px; font-weight:bold;">${log.name}</div><div style="font-size:10px; color:#888;">${log.status || ('통화 시간: ' + log.duration)}</div></div><div style="font-size:11px; color:${log.type === '수신' ? '#4caf50' : '#e53935'};">${log.type}</div>`;
+          list.appendChild(item);
+        });
+      });
+    }
+
+    function renderMemoApp() {
+      const list = $('memo-list');
+      list.innerHTML = "";
+      memoData.forEach(m => {
+        const item = document.createElement('div');
+        item.style.cssText = "padding:12px; border-bottom:1px solid #333; color:#fff;";
+        item.innerHTML = `<div style="font-size:10px; color:#888; margin-bottom:4px;">${m.date}</div><div style="font-size:12px; line-height:1.4; white-space:pre-line;">${m.text}</div>`;
+        list.appendChild(item);
+      });
+    }
+
+    function renderCalendarApp() {
+      const list = $('calendar-list');
+      list.innerHTML = "";
+      for (const [dateStr, evs] of Object.entries(calendarData)) {
+        const item = document.createElement('div');
+        item.style.cssText = "padding:12px; border-bottom:1px solid #333; color:#fff;";
+        let evHtml = evs.map(e => `• <span style="color:${colorMap[e.color] || '#fff'}">■</span> ${e.text}`).join('<br>');
+        item.innerHTML = `<div style="font-size:11px; color:#81c784; font-weight:bold; margin-bottom:4px;">${dateStr.replace(/-/g, '.')}</div><div style="font-size:12px; line-height:1.4;">${evHtml}</div>`;
+        list.appendChild(item);
+      }
+    }
+
+    // --- 메시지 관련 로직 ---
+    function formatTimeToAMPM(timeStr) {
+      if (!timeStr) return "";
+      if (timeStr.includes('오전') || timeStr.includes('오후')) return timeStr;
+      let parts = timeStr.split(':');
+      if (parts.length < 2) return timeStr;
+      let hour = parseInt(parts[0], 10);
+      let minute = parts[1];
+      let ampm = hour >= 12 ? '오후' : '오전';
+      hour = hour % 12 || 12;
+      return ampm + " " + String(hour).padStart(2, '0') + ":" + minute;
+    }
+
+    function renderMessagesApp(container) {
+      const rooms = Object.keys(chatRooms);
+      container.innerHTML = '<div class="app-header"><span class="back-arrow" onclick="goBack()">◀</span> 메시지 <span></span></div>' +
+        '<div id="msg-room-list-container" style="flex:1; overflow-y:auto;"></div>';
+      const listContainer = $('msg-room-list-container');
+
+      rooms.forEach(roomName => {
+        const sections = chatRooms[roomName];
+        let lastMsgText = "대화 내용 없음";
+        let lastTimeText = "";
+        if (sections && sections.length > 0) {
+          const lastSec = sections[sections.length - 1];
+          if (lastSec.msgs && lastSec.msgs.length > 0) {
+            const m = lastSec.msgs[lastSec.msgs.length - 1];
+            lastMsgText = m.text;
+            lastTimeText = formatTimeToAMPM(m.time);
+          }
+        }
+        let avatarBg = roomName === '류해온' ? '#527da8' : (roomName === '엄마' ? '#e57373' : '#ffb74d');
+        let shortName = roomName.charAt(0);
+
+        const item = document.createElement('div');
+        item.style.cssText = "display:flex; align-items:center; padding:12px; border-bottom:1px solid #222; cursor:pointer; gap:10px; background:#181a1f;";
+        item.onclick = () => openApp('chatRoom', roomName);
+        item.innerHTML = `<div style="width:40px; height:40px; border-radius:50%; background:${avatarBg}; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; flex-shrink:0;">${shortName}</div>` +
+          `<div style="flex:1; overflow:hidden;">` +
+          `<div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span style="font-weight:bold; font-size:13px; color:#fff;">${roomName}</span><span style="font-size:10px; color:#888;">${lastTimeText}</span></div>` +
+          `<div style="font-size:11px; color:#888; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${lastMsgText}</div></div>`;
+        listContainer.appendChild(item);
+      });
+    }
+
+    function loadChatBubbles(roomName) {
+      const bubbles = $('chat-bubbles');
+      bubbles.innerHTML = "";
+      const sections = chatRooms[roomName];
+      if (!sections) return;
+
+      sections.forEach(sec => {
+        const divDate = document.createElement('div');
+        divDate.style.cssText = "text-align:center; font-size:10px; color:#666; margin:10px 0 4px; font-weight:bold;";
+        divDate.textContent = sec.date;
+        bubbles.appendChild(divDate);
+
+        sec.msgs.forEach(m => {
+          const bubble = document.createElement('div');
+          const isMe = m.from === 'me';
+          const formattedTime = formatTimeToAMPM(m.time);
+          bubble.style.cssText = "max-width:80%; padding:8px 12px; border-radius:12px; font-size:12px; line-height:1.4; word-break:break-all; display:flex; flex-direction:column;" +
+            (isMe ? "align-self:flex-end; background:#d6f4a7; border:1px solid #95cb53;" : "align-self:flex-start; background:#fff; border:1px solid #ccc; color:#111;");
+          bubble.innerHTML = `<span>${m.text}</span><span style="font-size:9px; color:#666; margin-top:2px; align-self:${isMe ? 'flex-end' : 'flex-start'};">${formattedTime}</span>`;
+          bubbles.appendChild(bubble);
+        });
+      });
+      bubbles.scrollTop = bubbles.scrollHeight;
+    }
+
+    function sendMsg(roomName) {
+      const input = $('chat-input-text');
+      const txt = input.value.trim();
+      if (!txt) return;
+
+      const now = new Date();
+      let hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? '오후' : '오전';
+      hours = hours % 12 || 12;
+      const timeStr = ampm + " " + String(hours).padStart(2, '0') + ":" + minutes;
+
+      const todayStr = "2009년 09월 20일 일요일";
+      let targetSec = chatRooms[roomName].find(s => s.date === todayStr);
+      if (!targetSec) {
+        targetSec = {date: todayStr, msgs: []};
+        chatRooms[roomName].push(targetSec);
+      }
+
+      targetSec.msgs.push({from: 'me', time: timeStr, text: txt});
+      input.value = "";
+      loadChatBubbles(roomName);
+    }
+
+    // --- 메시지 데이터 ---
+    const chatRooms = {
+      "류해온": [
+        {date: "2004년 05월 08일 토요일", msgs: [
+          {from: "them", time: "14:14", text: "내일 놀이터 나올 거야?"},
+          {from: "me", time: "14:15", text: "응"},
+          {from: "them", time: "14:15", text: "몇 시"},
+          {from: "me", time: "14:16", text: "점심 먹고"},
+          {from: "them", time: "14:16", text: "알겠어"},
+          {from: "me", time: "14:17", text: "늦으면 두고 간다"},
+          {from: "them", time: "14:18", text: "니가 맨날 늦잖아"},
+          {from: "me", time: "14:18", text: "내일은 안 늦어"}
+        ]},
+        {date: "2005년 08월 03일 수요일", msgs: [
+          {from: "me", time: "16:42", text: "내 필통"},
+          {from: "them", time: "16:43", text: "왜"},
+          {from: "me", time: "16:43", text: "언제 줄 건데"},
+          {from: "them", time: "16:44", text: "내일"},
+          {from: "me", time: "16:44", text: "오늘 준다며"},
+          {from: "them", time: "16:45", text: "까먹었어"},
+          {from: "me", time: "16:45", text: "진짜 너랑 안 놀아"},
+          {from: "them", time: "16:46", text: "그래"},
+          {from: "me", time: "16:46", text: "내일 갖고 와"}
+        ]},
+        {date: "2006년 08월 22일 화요일", msgs: [
+          {from: "me", time: "19:16", text: "너 요즘 왜 그래"},
+          {from: "them", time: "19:18", text: "뭐가"},
+          {from: "me", time: "19:19", text: "약속도 맨날 취소하고"},
+          {from: "me", time: "19:19", text: "물어보면 아무것도 아니라고 하고"},
+          {from: "them", time: "19:21", text: "그냥 좀 내버려 둬"},
+          {from: "me", time: "19:21", text: "내가 뭘 잘못했는데"},
+          {from: "them", time: "19:24", text: "네가 맨날 내 물건 챙기는 거 지긋지긋해"},
+          {from: "me", time: "19:26", text: "그래"},
+          {from: "me", time: "19:27", text: "앞으로 안 챙길게"},
+          {from: "them", time: "19:31", text: "지수야"},
+          {from: "me", time: "19:32", text: "왜"},
+          {from: "them", time: "19:34", text: "아니야"}
+        ]},
+        {date: "2009년 09월 20일 일요일", msgs: [
+          {from: "me", time: "13:38", text: "너 어디야"},
+          {from: "them", time: "13:39", text: "물가 쪽"},
+          {from: "me", time: "13:39", text: "거기 왜 갔어"},
+          {from: "them", time: "13:40", text: "지금 오지 마"},
+          {from: "me", time: "13:40", text: "무슨 소리야"},
+          {from: "them", time: "13:41", text: "지수야 오지 말라고"},
+          {from: "me", time: "13:41", text: "너 혼자 두고 어떻게 가"},
+          {from: "them", time: "13:42", text: "오지 마"},
+          {from: "me", time: "13:43", text: "이미 늦었어"},
+          {from: "me", time: "14:18", text: "나 다쳤어"},
+          {from: "them", time: "14:18", text: "어디"},
+          {from: "me", time: "14:19", text: "오른쪽 다리"},
+          {from: "them", time: "14:19", text: "얼마나 다쳤는데"},
+          {from: "me", time: "14:20", text: "너는 괜찮잖아"},
+          {from: "them", time: "14:20", text: "그게 무슨 상관이야"},
+          {from: "me", time: "14:21", text: "그러니까 됐어"},
+          {from: "them", time: "14:21", text: "하나도 안 괜찮아"},
+          {from: "me", time: "14:22", text: "나중에 얘기해"}
+        ]},
+        {date: "2009년 09월 21일 월요일", msgs: [
+          {from: "me", time: "11:25", text: "너 아직 거기 있어?"},
+          {from: "them", time: "11:26", text: "응"},
+          {from: "me", time: "11:26", text: "왜 안 갔어"},
+          {from: "them", time: "11:27", text: "어디를"},
+          {from: "me", time: "11:27", text: "집에 가든 순찰을 가든"},
+          {from: "them", time: "11:28", text: "네가 여기 있는데"},
+          {from: "me", time: "11:28", text: "나 격리 중이야"},
+          {from: "them", time: "11:29", text: "알아"},
+          {from: "me", time: "11:29", text: "그럼 돌아가"},
+          {from: "them", time: "11:30", text: "싫어"},
+          {from: "me", time: "11:30", text: "너 진짜 고집 세다"},
+          {from: "them", time: "11:31", text: "너도"}
+        ]},
+        {date: "2009년 09월 23일 수요일", msgs: [
+          {from: "me", time: "08:12", text: "나 나왔어"},
+          {from: "them", time: "08:12", text: "봤어"},
+          {from: "me", time: "08:13", text: "계속 앞에 있지 마"},
+          {from: "them", time: "08:13", text: "왜"},
+          {from: "me", time: "08:13", text: "내가 따라가는 것 같잖아"},
+          {from: "them", time: "08:14", text: "원래 따라오잖아"},
+          {from: "me", time: "08:14", text: "죽을래?"},
+          {from: "them", time: "08:15", text: "다리부터 나아"},
+          {from: "me", time: "08:15", text: "그 얘기 하지 마"},
+          {from: "them", time: "08:16", text: "알았어"}
+        ]},
+        {date: "2009년 10월 02일 금요일", msgs: [
+          {from: "them", time: "15:07", text: "보급 끝났어?"},
+          {from: "me", time: "15:08", text: "응"},
+          {from: "them", time: "15:08", text: "어디야"},
+          {from: "me", time: "15:09", text: "창고"},
+          {from: "them", time: "15:09", text: "기다려"},
+          {from: "me", time: "15:09", text: "혼자 갈 수 있어"},
+          {from: "them", time: "15:10", text: "알아"},
+          {from: "me", time: "15:10", text: "그럼 왜"},
+          {from: "them", time: "15:11", text: "같이 가려고"},
+          {from: "me", time: "15:11", text: "나 혼자 다닐 수 있거든"},
+          {from: "them", time: "15:12", text: "다리 다 나았냐"},
+          {from: "me", time: "15:12", text: "아 진짜"}
+        ]},
+        {date: "2009년 11월 06일 금요일", msgs: [
+          {from: "them", time: "21:44", text: "아직 안 자?"},
+          {from: "me", time: "21:45", text: "응"},
+          {from: "them", time: "21:45", text: "약 먹었어?"},
+          {from: "me", time: "21:46", text: "무슨 약"},
+          {from: "them", time: "21:46", text: "진통제"},
+          {from: "me", time: "21:47", text: "먹었어"},
+          {from: "them", time: "21:47", text: "거짓말"},
+          {from: "me", time: "21:48", text: "어떻게 알았어"},
+          {from: "them", time: "21:48", text: "아까 안 먹었잖아"},
+          {from: "me", time: "21:49", text: "지금 먹을 거야"},
+          {from: "them", time: "21:49", text: "그래"},
+          {from: "me", time: "21:50", text: "너도 자"},
+          {from: "them", time: "21:50", text: "너 자면"}
+        ]},
+        {date: "2009년 12월 25일 금요일", msgs: [
+          {from: "me", time: "20:34", text: "뭐 해"},
+          {from: "them", time: "20:35", text: "순찰 끝나고 돌아가는 중"},
+          {from: "me", time: "20:35", text: "늦네"},
+          {from: "them", time: "20:36", text: "기다렸어?"},
+          {from: "me", time: "20:36", text: "아니"},
+          {from: "them", time: "20:37", text: "거짓말"},
+          {from: "me", time: "20:37", text: "빨리 와"},
+          {from: "them", time: "20:38", text: "응"}
+        ]},
+        {date: "2010년 01월 01일 금요일", msgs: [
+          {from: "me", time: "00:47", text: "새해 복 많이 받아"},
+          {from: "them", time: "00:48", text: "너도"},
+          {from: "me", time: "00:48", text: "올해는 집에 갈 수 있겠지"},
+          {from: "them", time: "00:49", text: "갈 거야"},
+          {from: "me", time: "00:49", text: "어떻게 알아"},
+          {from: "them", time: "00:50", text: "내가 데려갈 거니까"},
+          {from: "me", time: "00:51", text: "허세 부리지 마"},
+          {from: "them", time: "00:51", text: "자라"}
+        ]},
+        {date: "2010년 02월 03일 수요일", msgs: [
+          {from: "them", time: "23:17", text: "자?"},
+          {from: "me", time: "23:18", text: "아니"},
+          {from: "them", time: "23:18", text: "다리는 어때"},
+          {from: "me", time: "23:19", text: "멀쩡해"},
+          {from: "them", time: "23:19", text: "아직 절잖아"},
+          {from: "me", time: "23:20", text: "안 절어"},
+          {from: "them", time: "23:20", text: "알았어"},
+          {from: "me", time: "23:21", text: "너는"},
+          {from: "them", time: "23:21", text: "뭐가"},
+          {from: "me", time: "23:21", text: "괜찮냐고"},
+          {from: "them", time: "23:22", text: "괜찮아"},
+          {from: "me", time: "23:22", text: "거짓말"},
+          {from: "them", time: "23:23", text: "너한테 할 말은 아니네"},
+          {from: "me", time: "23:23", text: "그러게"}
+        ]},
+        {date: "2010년 02월 14일 일요일", msgs: [
+          {from: "me", time: "20:17", text: "초콜릿 먹었어?"},
+          {from: "them", time: "20:18", text: "네가 넣었어?"},
+          {from: "me", time: "20:18", text: "대답부터 해"},
+          {from: "them", time: "20:19", text: "먹었어"},
+          {from: "me", time: "20:19", text: "맛없지"},
+          {from: "them", time: "20:20", text: "맛있었어"},
+          {from: "me", time: "20:20", text: "다행이네"},
+          {from: "them", time: "20:21", text: "왜 줬어"},
+          {from: "me", time: "20:21", text: "그냥"},
+          {from: "them", time: "20:22", text: "나도 그냥 좋아"}
+        ]}
+      ],
+      "엄마": [
+        {date: "2009.06.14", msgs: [
+          {from: "them", time: "12:32", text: "밥 먹었어?"},
+          {from: "me", time: "12:48", text: "아직"},
+          {from: "them", time: "12:48", text: "점심시간 지났는데 뭘 아직이야"},
+          {from: "me", time: "12:51", text: "이따 먹을게"},
+          {from: "them", time: "12:51", text: "냉장고에 반찬 있으니까 챙겨 먹어"},
+          {from: "me", time: "13:07", text: "응"}
+        ]},
+        {date: "2009.07.02", msgs: [
+          {from: "them", time: "17:41", text: "오늘 몇 시에 와"},
+          {from: "me", time: "17:52", text: "몰라 좀 늦을 것 같아"},
+          {from: "them", time: "17:53", text: "저녁은"},
+          {from: "me", time: "17:54", text: "밖에서 먹을게"},
+          {from: "them", time: "17:54", text: "돈 있어?"},
+          {from: "me", time: "17:55", text: "응"},
+          {from: "them", time: "17:56", text: "늦어도 연락은 해"},
+          {from: "me", time: "18:03", text: "알겠어"}
+        ]},
+        {date: "2009.08.11", msgs: [
+          {from: "them", time: "08:12", text: "우산 챙겨 나가 비 온대"},
+          {from: "me", time: "08:19", text: "아 벌써 나왔는데"},
+          {from: "them", time: "08:19", text: "그럼 편의점에서 하나 사"},
+          {from: "me", time: "08:20", text: "싫어"},
+          {from: "them", time: "08:20", text: "비 맞고 감기 걸리면 너만 손해야"},
+          {from: "me", time: "08:21", text: "알았어"},
+          {from: "them", time: "08:21", text: "말만 잘하지"}
+        ]},
+        {date: "2009.09.03", msgs: [
+          {from: "them", time: "19:16", text: "오는 길에 우유 좀 사 와"},
+          {from: "me", time: "19:22", text: "무슨 우유"},
+          {from: "them", time: "19:23", text: "냉장고에 있는 거 다 먹었잖아"},
+          {from: "me", time: "19:24", text: "초코우유도 돼?"},
+          {from: "them", time: "19:24", text: "안 돼"},
+          {from: "me", time: "19:25", text: "왜"},
+          {from: "them", time: "19:25", text: "그냥 흰 우유 사 와"},
+          {from: "me", time: "19:26", text: "알겠어"}
+        ]},
+        {date: "2009.09.19", msgs: [
+          {from: "them", time: "18:03", text: "오늘 집에 들어오는 거지?"},
+          {from: "me", time: "18:17", text: "응"},
+          {from: "them", time: "18:17", text: "요즘 밖에 시끄럽던데 일찍 들어와"},
+          {from: "me", time: "18:21", text: "알겠어"},
+          {from: "them", time: "18:22", text: "저녁은 먹었어?"},
+          {from: "me", time: "18:24", text: "아직"},
+          {from: "them", time: "18:25", text: "들어오면 밥 데워 줄게"},
+          {from: "me", time: "18:26", text: "그냥 라면 먹을래"},
+          {from: "them", time: "18:27", text: "밥 있는데 왜 라면을 먹어"},
+          {from: "me", time: "18:28", text: "라면이 먹고 싶으니까"},
+          {from: "them", time: "18:29", text: "알아서 해"}
+        ]},
+        {date: "2009.09.20", msgs: [
+          {from: "me", time: "09:14", text: "엄마"},
+          {from: "me", time: "09:19", text: "지금 어디야"},
+          {from: "me", time: "09:26", text: "전화 왜 안 받아"},
+          {from: "me", time: "09:31", text: "엄마 뉴스 봤어?"},
+          {from: "me", time: "09:42", text: "지금 밖에 이상해"},
+          {from: "me", time: "10:03", text: "엄마 나 학교야"},
+          {from: "me", time: "10:17", text: "전화 좀 받아 봐"},
+          {from: "me", time: "10:46", text: "엄마 제발"}
+        ]},
+        {date: "2009.09.21", msgs: [
+          {from: "me", time: "07:32", text: "엄마 나 아직 학교에 있어"},
+          {from: "me", time: "07:33", text: "집에 갈 수가 없어"},
+          {from: "me", time: "08:01", text: "엄마는 괜찮지"},
+          {from: "me", time: "08:46", text: "전화 한 번만 해 줘"},
+          {from: "me", time: "11:28", text: "나 밥 먹었어"},
+          {from: "me", time: "11:29", text: "엄마도 밥 먹어야 되는데"},
+          {from: "me", time: "14:16", text: "집에 가면 엄마가 해 준 밥 먹고 싶어"}
+        ]},
+        {date: "2009.09.25", msgs: [
+          {from: "me", time: "16:42", text: "엄마 나 아직 학교야"},
+          {from: "me", time: "16:43", text: "여기 애들이랑 같이 있어"},
+          {from: "me", time: "16:44", text: "나 괜찮아"},
+          {from: "me", time: "16:45", text: "그러니까 엄마도 괜찮다고 해 줘"},
+          {from: "me", time: "19:08", text: "엄마"},
+          {from: "me", time: "19:09", text: "나 집에 가고 싶어"}
+        ]},
+        {date: "2009.10.02", msgs: [
+          {from: "me", time: "20:11", text: "엄마 나 오늘 밥 먹었어"},
+          {from: "me", time: "20:12", text: "진짜야"},
+          {from: "me", time: "20:13", text: "근데 엄마가 해 주는 밥 먹고 싶어"},
+          {from: "me", time: "20:14", text: "김치찌개 먹고 싶다"},
+          {from: "me", time: "20:16", text: "엄마는 맨날 짜게 한다고 뭐라 했는데"},
+          {from: "me", time: "20:17", text: "지금은 그게 제일 먹고 싶어"}
+        ]},
+        {date: "2009.10.14", msgs: [
+          {from: "me", time: "00:23", text: "엄마 나 오늘은 잠이 안 와"},
+          {from: "me", time: "00:24", text: "여기 너무 조용해"},
+          {from: "me", time: "00:26", text: "엄마랑 싸우고 나서도 맨날 집에 가면 엄마 있었잖아"},
+          {from: "me", time: "00:28", text: "그래서 그냥 맨날 그럴 줄 알았어"},
+          {from: "me", time: "00:31", text: "엄마 나중에 문자 보면 답장해 줘"}
+        ]},
+        {date: "2009.11.06", msgs: [
+          {from: "me", time: "17:52", text: "엄마 오늘 날씨 추워"},
+          {from: "me", time: "17:53", text: "엄마가 사 준 겉옷 아직 갖고 있어"},
+          {from: "me", time: "17:54", text: "그때는 색 별로라고 안 입는다 했는데"},
+          {from: "me", time: "17:55", text: "요즘은 맨날 입어"},
+          {from: "me", time: "17:57", text: "따뜻해"}
+        ]},
+        {date: "2009.12.24", msgs: [
+          {from: "me", time: "21:16", text: "엄마 오늘 크리스마스 이브래"},
+          {from: "me", time: "21:17", text: "작년에는 케이크 먹었잖아"},
+          {from: "me", time: "21:18", text: "엄마가 초 너무 많다고 뭐라 했는데"},
+          {from: "me", time: "21:20", text: "올해는 아무것도 없어"},
+          {from: "me", time: "21:22", text: "엄마 보고 싶어"}
+        ]},
+        {date: "2010.01.01", msgs: [
+          {from: "me", time: "00:07", text: "엄마 새해 복 많이 받아"},
+          {from: "me", time: "00:08", text: "올해는 집에 갈 수 있겠지"},
+          {from: "me", time: "00:10", text: "나 가면 잔소리하지 마"},
+          {from: "me", time: "00:11", text: "나도 이제 말 잘 들을게"},
+          {from: "me", time: "00:13", text: "그러니까 답장 좀 해 줘"}
+        ]}
+      ],
+      "아빠": [
+        {date: "2009년 05월 17일 일요일", msgs: [
+          {from: "me", time: "18:42", text: "아빠 오늘 늦게 와?"},
+          {from: "them", time: "18:56", text: "응 늦어"},
+          {from: "me", time: "18:57", text: "저녁은"},
+          {from: "them", time: "19:03", text: "먹고 들어갈게"},
+          {from: "me", time: "19:04", text: "알겠어"}
+        ]},
+        {date: "2009년 06월 03일 수요일", msgs: [
+          {from: "them", time: "16:21", text: "이번 주말에 집에 있냐"},
+          {from: "me", time: "16:38", text: "왜"},
+          {from: "them", time: "16:40", text: "필요한 거 있으면 사다 주려고"},
+          {from: "me", time: "16:42", text: "딱히 없어"},
+          {from: "them", time: "16:43", text: "그래"}
+        ]},
+        {date: "2009년 07월 21일 화요일", msgs: [
+          {from: "me", time: "21:14", text: "아빠"},
+          {from: "them", time: "21:19", text: "왜"},
+          {from: "me", time: "21:20", text: "용돈 좀"},
+          {from: "them", time: "21:21", text: "얼마"},
+          {from: "me", time: "21:22", text: "5만원"},
+          {from: "them", time: "21:25", text: "보냈다"},
+          {from: "me", time: "21:26", text: "확인했어"},
+          {from: "them", time: "21:27", text: "필요한 데 써"}
+        ]},
+        {date: "2009년 08월 09일 일요일", msgs: [
+          {from: "them", time: "19:32", text: "밥 먹었냐"},
+          {from: "me", time: "19:46", text: "아직"},
+          {from: "them", time: "19:47", text: "밥은 챙겨 먹어라"},
+          {from: "me", time: "19:48", text: "응"},
+          {from: "them", time: "19:49", text: "냉장고에 반찬 있다"},
+          {from: "me", time: "19:50", text: "알겠어"}
+        ]},
+        {date: "2009년 09월 19일 토요일", msgs: [
+          {from: "me", time: "20:13", text: "아빠 언제 와"},
+          {from: "them", time: "20:31", text: "며칠 걸릴 것 같다"},
+          {from: "me", time: "20:32", text: "왜"},
+          {from: "them", time: "20:36", text: "일이 좀 생겼어"},
+          {from: "me", time: "20:38", text: "알겠어"}
+        ]},
+        {date: "2009년 09월 20일 일요일", msgs: [
+          {from: "me", time: "09:17", text: "아빠"},
+          {from: "me", time: "09:19", text: "뉴스 봤어?"},
+          {from: "me", time: "09:24", text: "지금 밖에 이상해"},
+          {from: "me", time: "09:41", text: "전화 안 돼?"},
+          {from: "me", time: "10:03", text: "아빠 어디야"},
+          {from: "me", time: "11:26", text: "나 학교에 있어"},
+          {from: "me", time: "12:08", text: "연락 좀 해줘"}
+        ]},
+        {date: "2009년 09월 21일 월요일", msgs: [
+          {from: "me", time: "07:32", text: "아빠 나 아직 학교야"},
+          {from: "me", time: "07:34", text: "여기 사람들 많아"},
+          {from: "me", time: "07:39", text: "밖에 나가면 안 된대"},
+          {from: "me", time: "08:12", text: "아빠는 괜찮아?"},
+          {from: "me", time: "21:46", text: "전화 한 번만 해줘"}
+        ]},
+        {date: "2009년 09월 24일 목요일", msgs: [
+          {from: "me", time: "16:08", text: "아빠 전화 한 번만 받아줘"},
+          {from: "me", time: "16:10", text: "다른 애들은 가족이랑 연락하는데"},
+          {from: "me", time: "16:13", text: "아빠는 왜 연락이 안 돼"},
+          {from: "me", time: "23:51", text: "혹시 이거 보면 답장해줘"}
+        ]},
+        {date: "2009년 10월 02일 금요일", msgs: [
+          {from: "me", time: "12:34", text: "아빠 나 밥 먹었어"},
+          {from: "me", time: "12:36", text: "여기 있는 애들이랑 나눠 먹었어"},
+          {from: "me", time: "12:40", text: "아빠도 밥 먹었지"},
+          {from: "me", time: "22:17", text: "내일도 연락할게"}
+        ]},
+        {date: "2009년 10월 19일 월요일", msgs: [
+          {from: "me", time: "18:23", text: "아빠"},
+          {from: "me", time: "18:25", text: "나 아직 괜찮아"},
+          {from: "me", time: "18:29", text: "그러니까 아빠도 괜찮았으면 좋겠어"},
+          {from: "me", time: "18:31", text: "연락 기다릴게"}
+        ]},
+        {date: "2009년 11월 06일 금요일", msgs: [
+          {from: "me", time: "21:07", text: "아빠 나 아빠 번호 안 지웠어"},
+          {from: "me", time: "21:10", text: "혹시 나중에 연락 오면 바로 볼 수 있게"},
+          {from: "me", time: "21:13", text: "별 의미 없는 거 아는데 그냥 그래"}
+        ]},
+        {date: "2009년 12월 25일 금요일", msgs: [
+          {from: "me", time: "19:42", text: "메리 크리스마스"},
+          {from: "me", time: "19:45", text: "작년에는 아빠가 케이크 사 왔었잖아"},
+          {from: "me", time: "19:49", text: "그 그거 별로 맛없다고 했는데 사실 맛있었어"},
+          {from: "me", time: "19:52", text: "다음에는 내가 사 갈게"}
+        ]},
+        {date: "2010년 01월 01일 금요일", msgs: [
+          {from: "me", time: "00:14", text: "새해 복 많이 받아 아빠"},
+          {from: "me", time: "00:17", text: "올해는 집에서 봤으면 좋겠다"},
+          {from: "me", time: "00:21", text: "나 이제 집에 가고 싶어"}
+        ]}
+      ]
+    };
+  </script>
+</body>
+</html>
